@@ -61,6 +61,7 @@
 
         let numStars = 1500;
         const stars = [];
+        const comets = [];
         let baseSpeed = 5;
         let speed = baseSpeed;
         let score = 0;
@@ -91,6 +92,46 @@
                 o: Math.random(),
                 size: Math.max((Math.random() * 5 + 1), 4) * (index % 50 === 0 ? 3 : 1), // Minimum size 4x4 pixels, tripled if special
                 isSpecial: index % 50 === 0 // Every 50th star is special
+            };
+        }
+
+        function createComet() {
+            const direction = Math.floor(Math.random() * 4);
+            let x, y, vx, vy;
+
+            switch (direction) {
+                case 0: // from top
+                    x = Math.random() * canvas.width;
+                    y = 0;
+                    vx = (Math.random() - 0.5) * 10;
+                    vy = Math.random() * 5 + 2;
+                    break;
+                case 1: // from bottom
+                    x = Math.random() * canvas.width;
+                    y = canvas.height;
+                    vx = (Math.random() - 0.5) * 10;
+                    vy = -(Math.random() * 5 + 2);
+                    break;
+                case 2: // from left
+                    x = 0;
+                    y = Math.random() * canvas.height;
+                    vx = Math.random() * 5 + 2;
+                    vy = (Math.random() - 0.5) * 10;
+                    break;
+                case 3: // from right
+                    x = canvas.width;
+                    y = Math.random() * canvas.height;
+                    vx = -(Math.random() * 5 + 2);
+                    vy = (Math.random() - 0.5) * 10;
+                    break;
+            }
+
+            return {
+                x,
+                y,
+                vx,
+                vy,
+                size: Math.random() * 8 + 5
             };
         }
 
@@ -140,6 +181,7 @@
             isGameOver = false;
             gameOverDiv.style.display = 'none';
             populateStars();
+            comets.length = 0;
             updateStars();
         }
 
@@ -162,7 +204,7 @@
 
                 if (star.z <= 0) {
                     if (!star.isSpecial) {
-                        score += 1;
+                        score  +=  1;
                     }
                     Object.assign(star, createStar(i));
                     star.z = canvas.width;
@@ -185,6 +227,32 @@
                         gameOver();
                         return;
                     }
+                }
+            }
+
+            // Comets
+            if (score % 100 === 0 ) {
+                comets.push(createComet());
+            }
+
+            for (let i = 0; i < comets.length; i++) {
+                let comet = comets[i];
+                comet.x += comet.vx;
+                comet.y += comet.vy;
+
+                context.fillStyle = "orange";
+                context.beginPath();
+                context.arc(comet.x, comet.y, comet.size, 0, Math.PI * 2);
+                context.fill();
+
+                if (comet.x < 0 || comet.x > canvas.width || comet.y < 0 || comet.y > canvas.height) {
+                    comets.splice(i, 1);
+                    i--;
+                }
+
+                if (comet.x > ship.x - ship.width / 2 && comet.x < ship.x + ship.width / 2 && comet.y > ship.y - ship.height / 2 && comet.y < ship.y + ship.height / 2) {
+                    gameOver();
+                    return;
                 }
             }
 
