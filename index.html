@@ -59,7 +59,7 @@
 
         const context = canvas.getContext("2d");
 
-        let numStars = 1500;
+        let numStars = 500;
         const stars = [];
         const comets = [];
         let baseSpeed = 5;
@@ -93,7 +93,7 @@
                 y,
                 z: Math.random() * canvas.width,
                 o: Math.random(),
-                size: Math.max((Math.random() * 5 + 1), 4) * (index % 50 === 0 ? 3 : 1), // Minimum size 4x4 pixels, tripled if special
+                size: Math.max((Math.random() * 10 + 3), 1) * (index % 50 === 0 ? 3 : 1), // Minimum size 4x4 pixels, tripled if special
                 isSpecial: index % 50 === 0 // Every 50th star is special
             };
         }
@@ -149,12 +149,12 @@
             if (event.code === 'ArrowUp' || event.code === 'KeyW') {
                 clearInterval(speedDecreaseInterval);
                 speedIncreaseInterval = setInterval(() => {
-                    speed += 0.1;
+                    speed += 2;
                 }, 100);
             } else if (event.code === 'ArrowDown' || event.code === 'KeyS') {
                 clearInterval(speedIncreaseInterval);
                 speedDecreaseInterval = setInterval(() => {
-                    speed = Math.max(1, speed - 0.1);
+                    speed = Math.max(1, speed - 2);
                 }, 100);
             } else if (event.code === 'NumpadAdd') {
                 numStars += 100;
