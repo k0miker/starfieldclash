@@ -232,7 +232,7 @@
             if (!isGameOver) {
                 const touch = event.touches[0];
                 ship.x = touch.clientX;
-                ship.y = touch.clientY +100;
+                ship.y = touch.clientY -300;
             }
         });
 
@@ -240,7 +240,7 @@
             if (isGameOver) {
                 const touch = event.touches[0];
                 ship.x = touch.clientX;
-                ship.y = touch.clientY+100;
+                ship.y = touch.clientY-300;
                 resetGame();
             }
         });
