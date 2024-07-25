@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Starfield Warp Animation</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: black;
+            overflow: hidden;
+            color: white;
+        }
+
+        #score {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 20px;
+        }
+
+        #gameover {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 30px;
+            display: none;
+            color: red;
+        }
+
+        #highscore {
+            position: absolute;
+            top: 40px;
+            right: 10px;
+            font-size: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="2dcanvas"></canvas>
+    <div id="score">Score: 0</div>
+    <div id="highscore">High Score: 0</div>
+    <div id="gameover">Game Over! Click to Restart</div>
+
+    <script>
+        const canvas = document.getElementById('2dcanvas');
+        const scoreDiv = document.getElementById('score');
+        const highScoreDiv = document.getElementById('highscore');
+        const gameOverDiv = document.getElementById('gameover');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const context = canvas.getContext("2d");
+
+        let numStars = 1500;
+        const stars = [];
+        let baseSpeed = 5;
+        let speed = baseSpeed;
+        let score = 0;
+        let isGameOver = false;
+        let highScore = localStorage.getItem('highScore') || 0;
+
+        const ship = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            width: 50,
+            height: 50
+        };
+
+        const shipImg = new Image();
+        shipImg.src = 'ship.png'; // Make sure to have ship.png in the correct directory
+
+        function createStar(index) {
+            let x, y;
+            do {
+                x = Math.random() * canvas.width;
+                y = Math.random() * canvas.height;
+            } while (Math.hypot(x - ship.x, y - ship.y) < 80); // Ensure star is at least 100px away from the ship
+
+            return {
+                x,
+                y,
+                z: Math.random() * canvas.width,
+                o: Math.random(),
+                size: Math.max((Math.random() * 5 + 1), 4) * (index % 50 === 0 ? 3 : 1), // Minimum size 4x4 pixels, tripled if special
+                isSpecial: index % 50 === 0 // Every 50th star is special
+            };
+        }
+
+        function populateStars() {
+            stars.length = 0;
+            for (let i = 0; i < numStars; i++) {
+                stars.push(createStar(i));
+            }
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (event.code === 'ArrowUp' || event.code === 'KeyW') {
+                speed += 10;
+            } else if (event.code === 'ArrowDown' || event.code === 'KeyS') {
+                speed = Math.max(1, speed - 10);
+            } else if (event.code === 'NumpadAdd') {
+                numStars += 100;
+                populateStars();
+            } else if (event.code === 'NumpadSubtract') {
+                numStars = Math.max(100, numStars - 100);
+                populateStars();
+            }
+        });
+
+        canvas.addEventListener('mousemove', (event) => {
+            if (!isGameOver) {
+                ship.x = event.clientX;
+                ship.y = event.clientY;
+            }
+        });
+
+        canvas.addEventListener('click', (event) => {
+            ship.x = event.clientX;
+            ship.y = event.clientY;
+            resetGame();
+        });
+
+        function resetGame() {
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('highScore', highScore);
+            }
+            score = 0;
+            speed = baseSpeed;
+            numStars = 1000;
+            isGameOver = false;
+            gameOverDiv.style.display = 'none';
+            populateStars();
+            updateStars();
+        }
+
+        function gameOver() {
+            isGameOver = true;
+            gameOverDiv.style.display = 'block';
+            highScoreDiv.textContent = `High Score: ${highScore}`;
+        }
+
+        function updateStars() {
+            if (isGameOver) return;
+
+            context.clearRect(0, 0, canvas.width, canvas.height);
+
+            context.drawImage(shipImg, ship.x - ship.width / 2, ship.y - ship.height / 2, ship.width, ship.height);
+
+            for (let i = 0; i < stars.length; i++) {
+                let star = stars[i];
+                star.z -= speed;
+
+                if (star.z <= 0) {
+                    if (!star.isSpecial) {
+                        score += 1;
+                    }
+                    Object.assign(star, createStar(i));
+                    star.z = canvas.width;
+                }
+
+                const sx = (star.x - ship.x) * (canvas.width / star.z) + ship.x;
+                const sy = (star.y - ship.y) * (canvas.width / star.z) + ship.y;
+                const size = Math.max((1 - star.z / canvas.width) * star.size, 4);
+                
+                context.fillStyle = star.isSpecial ? "red" : "white";
+                context.fillRect(sx, sy, size, size);
+
+                // Collision detection
+                if (sx > ship.x - ship.width / 2 && sx < ship.x + ship.width / 2 && sy > ship.y - ship.height / 2 && sy < ship.y + ship.height / 2) {
+                    if (star.isSpecial) {
+                        score += 1000;
+                        Object.assign(star, createStar(i));
+                        star.z = canvas.width;
+                    } else {
+                        gameOver();
+                        return;
+                    }
+                }
+            }
+
+            scoreDiv.textContent = `Score: ${score}`;
+            highScoreDiv.textContent = `High Score: ${highScore}`;
+
+            // Increase speed and number of stars based on the score
+            speed = baseSpeed + Math.floor(score / 10000);
+            if (score % 10000 === 0) {
+                numStars += 200;
+                populateStars();
+            }
+
+            requestAnimationFrame(updateStars);
+        }
+
+        function initGame() {
+            canvas.addEventListener('mousemove', (event) => {
+                ship.x = event.clientX;
+                ship.y = event.clientY;
+                canvas.removeEventListener('mousemove', initGame); // Remove the event listener after the first movement
+            });
+
+            shipImg.onload = () => {
+                populateStars();
+                updateStars();
+            };
+        }
+
+        initGame();
+    </script>
+</body>
+
+</html>
