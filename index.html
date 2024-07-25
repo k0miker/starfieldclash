@@ -82,7 +82,7 @@
             do {
                 x = Math.random() * canvas.width;
                 y = Math.random() * canvas.height;
-            } while (Math.hypot(x - ship.x, y - ship.y) < 80); // Ensure star is at least 100px away from the ship
+            } while (Math.hypot(x - ship.x, y - ship.y) < 50); // Ensure star is at least 50px away from the ship
 
             return {
                 x,
@@ -102,8 +102,9 @@
         }
 
         document.addEventListener('keydown', (event) => {
-            if (event.code === 'ArrowUp' || event.code === 'KeyW') {
-                speed += 10;
+            if (event.code === 'ArrowUp' || event.code === 'KeyW') {                
+                speed += 10;               
+                
             } else if (event.code === 'ArrowDown' || event.code === 'KeyS') {
                 speed = Math.max(1, speed - 10);
             } else if (event.code === 'NumpadAdd') {
