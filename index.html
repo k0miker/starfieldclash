@@ -15,11 +15,19 @@
             background-color: black;
             overflow: hidden;
             color: white;
+            font-family: Arial, sans-serif;
         }
 
         #score {
             position: absolute;
             top: 10px;
+            right: 10px;
+            font-size: 20px;
+        }
+
+        #highscore {
+            position: absolute;
+            top: 40px;
             right: 10px;
             font-size: 20px;
         }
@@ -34,11 +42,28 @@
             color: red;
         }
 
-        #highscore {
+        #instructions {
             position: absolute;
-            top: 40px;
-            right: 10px;
+            top: 10px;
+            left: 10px;
             font-size: 20px;
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: left;
+        }
+
+        #startButton {
+            position: absolute;
+            top: 50%;
+            left: 70%;
+            font-size: 24px;
+            padding: 10px 20px;
+            background-color: green;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -48,12 +73,27 @@
     <div id="score">Score: 0</div>
     <div id="highscore">High Score: 0</div>
     <div id="gameover">Game Over! Click to Restart</div>
+    <div id="instructions">
+        <h2>Game Instructions</h2>
+        <p>Control the spaceship with your mouse or touch.</p>
+        <p>Avoid regular stars and comets, collect red special stars for bonus points.</p>
+        <p>Use the following keys to adjust the game:</p>
+        <ul>
+            <li><b>Arrow Up / W:</b> Increase speed</li>
+            <li><b>Arrow Down / S:</b> Decrease speed</li>
+            <li><b>NumPad +:</b> Increase number of stars</li>
+            <li><b>NumPad -:</b> Decrease number of stars</li>
+        </ul>
+        <button id="startButton">Start Game</button>
+    </div>
 
     <script>
         const canvas = document.getElementById('2dcanvas');
         const scoreDiv = document.getElementById('score');
         const highScoreDiv = document.getElementById('highscore');
         const gameOverDiv = document.getElementById('gameover');
+        const instructionsDiv = document.getElementById('instructions');
+        const startButton = document.getElementById('startButton');
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
@@ -181,9 +221,11 @@
         });
 
         canvas.addEventListener('click', (event) => {
-            ship.x = event.clientX;
-            ship.y = event.clientY;
-            resetGame();
+            if (isGameOver) {
+                ship.x = event.clientX;
+                ship.y = event.clientY;
+                resetGame();
+            }
         });
 
         canvas.addEventListener('touchmove', (event) => {
@@ -195,10 +237,12 @@
         });
 
         canvas.addEventListener('touchstart', (event) => {
-            const touch = event.touches[0];
-            ship.x = touch.clientX;
-            ship.y = touch.clientY;
-            resetGame();
+            if (isGameOver) {
+                const touch = event.touches[0];
+                ship.x = touch.clientX;
+                ship.y = touch.clientY;
+                resetGame();
+            }
         });
 
         function resetGame() {
@@ -244,7 +288,7 @@
                 const sx = (star.x - ship.x) * (canvas.width / star.z) + ship.x;
                 const sy = (star.y - ship.y) * (canvas.width / star.z) + ship.y;
                 const size = Math.max((1 - star.z / canvas.width) * star.size, 4);
-                
+
                 context.fillStyle = star.isSpecial ? "red" : "white";
                 // Draw stars as circles
                 context.beginPath();
@@ -304,23 +348,32 @@
         }
 
         function initGame() {
-            canvas.addEventListener('mousemove', (event) => {
-                ship.x = event.clientX;
-                ship.y = event.clientY;
-                canvas.removeEventListener('mousemove', initGame); // Remove the event listener after the first movement
-            });
-
-            canvas.addEventListener('touchstart', (event) => {
-                const touch = event.touches[0];
-                ship.x = touch.clientX +100;
-                ship.y = touch.clientY;
-                canvas.removeEventListener('touchstart', initGame); // Remove the event listener after the first touch
+            startButton.addEventListener('click', () => {
+                instructionsDiv.style.display = 'none';
+                canvas.addEventListener('mousemove', handleMouseMove);
+                canvas.addEventListener('touchstart', handleTouchStart);
+                resetGame();
             });
 
             shipImg.onload = () => {
                 populateStars();
                 updateStars();
             };
+        }
+
+        function handleMouseMove(event) {
+            if (!isGameOver) {
+                ship.x = event.clientX;
+                ship.y = event.clientY;
+            }
+        }
+
+        function handleTouchStart(event) {
+            if (!isGameOver) {
+                const touch = event.touches[0];
+                ship.x = touch.clientX;
+                ship.y = touch.clientY;
+            }
         }
 
         initGame();
