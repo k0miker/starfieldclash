@@ -186,6 +186,21 @@
             resetGame();
         });
 
+        canvas.addEventListener('touchmove', (event) => {
+            if (!isGameOver) {
+                const touch = event.touches[0];
+                ship.x = touch.clientX;
+                ship.y = touch.clientY;
+            }
+        });
+
+        canvas.addEventListener('touchstart', (event) => {
+            const touch = event.touches[0];
+            ship.x = touch.clientX;
+            ship.y = touch.clientY;
+            resetGame();
+        });
+
         function resetGame() {
             if (score > highScore) {
                 highScore = score;
@@ -231,7 +246,10 @@
                 const size = Math.max((1 - star.z / canvas.width) * star.size, 4);
                 
                 context.fillStyle = star.isSpecial ? "red" : "white";
-                context.fillRect(sx, sy, size, size);
+                // Draw stars as circles
+                context.beginPath();
+                context.arc(sx, sy, size / 2, 0, Math.PI * 2);
+                context.fill();
 
                 // Collision detection
                 if (sx > ship.x - ship.width / 2 && sx < ship.x + ship.width / 2 && sy > ship.y - ship.height / 2 && sy < ship.y + ship.height / 2) {
@@ -290,6 +308,13 @@
                 ship.x = event.clientX;
                 ship.y = event.clientY;
                 canvas.removeEventListener('mousemove', initGame); // Remove the event listener after the first movement
+            });
+
+            canvas.addEventListener('touchstart', (event) => {
+                const touch = event.touches[0];
+                ship.x = touch.clientX;
+                ship.y = touch.clientY;
+                canvas.removeEventListener('touchstart', initGame); // Remove the event listener after the first touch
             });
 
             shipImg.onload = () => {
