@@ -312,7 +312,7 @@
 
             canvas.addEventListener('touchstart', (event) => {
                 const touch = event.touches[0];
-                ship.x = touch.clientX;
+                ship.x = touch.clientX +100;
                 ship.y = touch.clientY;
                 canvas.removeEventListener('touchstart', initGame); // Remove the event listener after the first touch
             });
