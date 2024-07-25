@@ -68,6 +68,9 @@
         let isGameOver = false;
         let highScore = localStorage.getItem('highScore') || 0;
 
+        let speedIncreaseInterval;
+        let speedDecreaseInterval;
+
         const ship = {
             x: canvas.width / 2,
             y: canvas.height / 2,
@@ -143,17 +146,30 @@
         }
 
         document.addEventListener('keydown', (event) => {
-            if (event.code === 'ArrowUp' || event.code === 'KeyW') {                
-                speed += 10;               
-                
+            if (event.code === 'ArrowUp' || event.code === 'KeyW') {
+                clearInterval(speedDecreaseInterval);
+                speedIncreaseInterval = setInterval(() => {
+                    speed += 0.1;
+                }, 100);
             } else if (event.code === 'ArrowDown' || event.code === 'KeyS') {
-                speed = Math.max(1, speed - 10);
+                clearInterval(speedIncreaseInterval);
+                speedDecreaseInterval = setInterval(() => {
+                    speed = Math.max(1, speed - 0.1);
+                }, 100);
             } else if (event.code === 'NumpadAdd') {
                 numStars += 100;
                 populateStars();
             } else if (event.code === 'NumpadSubtract') {
                 numStars = Math.max(100, numStars - 100);
                 populateStars();
+            }
+        });
+
+        document.addEventListener('keyup', (event) => {
+            if (event.code === 'ArrowUp' || event.code === 'KeyW') {
+                clearInterval(speedIncreaseInterval);
+            } else if (event.code === 'ArrowDown' || event.code === 'KeyS') {
+                clearInterval(speedDecreaseInterval);
             }
         });
 
@@ -177,7 +193,7 @@
             }
             score = 0;
             speed = baseSpeed;
-            numStars = 1000;
+            numStars = 1500;
             isGameOver = false;
             gameOverDiv.style.display = 'none';
             populateStars();
@@ -204,7 +220,7 @@
 
                 if (star.z <= 0) {
                     if (!star.isSpecial) {
-                        score  +=  1;
+                        score += 1;
                     }
                     Object.assign(star, createStar(i));
                     star.z = canvas.width;
@@ -231,7 +247,7 @@
             }
 
             // Comets
-            if (score % 100 === 0 ) {
+            if (score % 100 === 0) {
                 comets.push(createComet());
             }
 
