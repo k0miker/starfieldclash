@@ -79,8 +79,10 @@
         <p>Avoid regular stars and comets, collect red special stars for bonus points.</p>
         <p>Use the following keys to adjust the game:</p>
         <ul>
-            <li><b>Arrow Up / W:</b> Increase speed</li>
-            <li><b>Arrow Down / S:</b> Decrease speed</li>
+            <li><b>Arrow Up:</b> Increase speed</li>
+            <li><b>Arrow Down:</b> Decrease speed</li>
+            <li><b>W:</b> Increase speed to 5x current speed while held</li>
+            <li><b>S:</b> Set speed to current speed / 2 while pressed</li>
             <li><b>NumPad +:</b> Increase number of stars</li>
             <li><b>NumPad -:</b> Decrease number of stars</li>
         </ul>
@@ -99,7 +101,7 @@
 
         const context = canvas.getContext("2d");
 
-        let numStars = 50;
+        let numStars = 250;
         const stars = [];
         const comets = [];
         let baseSpeed = 5;
@@ -107,9 +109,8 @@
         let score = 0;
         let isGameOver = false;
         let highScore = localStorage.getItem('highScore') || 0;
-
-        let speedIncreaseInterval;
-        let speedDecreaseInterval;
+        let isWPressed = false;
+        let isSPressed = false;
 
         const ship = {
             x: canvas.width / 2,
@@ -119,7 +120,10 @@
         };
 
         const shipImg = new Image();
-        shipImg.src = 'ship.png'; // Make sure to have ship.png in the correct directory
+        shipImg.src = 'ship.png';
+
+        const cometImg = new Image();
+        cometImg.src = 'comet.png';
 
         function createStar(index) {
             let x, y;
@@ -133,8 +137,8 @@
                 y,
                 z: Math.random() * canvas.width,
                 o: Math.random(),
-                size: Math.max((Math.random() * 10 + 3), 1) * (index % 50 === 0 ? 3 : 1), // Minimum size 4x4 pixels, tripled if special
-                isSpecial: index % 50 === 0 // Every 50th star is special
+                size: 0, // Start with size 0
+                isSpecial: index % 20 === 0 // Every 20th star is special
             };
         }
 
@@ -179,23 +183,29 @@
         }
 
         function populateStars() {
-            stars.length = 0;
-            for (let i = 0; i < numStars; i++) {
-                stars.push(createStar(i));
+            const newStarsCount = numStars - stars.length;
+            for (let i = 0; i < newStarsCount; i++) {
+                stars.push(createStar(stars.length + i));
             }
         }
 
         document.addEventListener('keydown', (event) => {
-            if (event.code === 'ArrowUp' || event.code === 'KeyW') {
+            if (event.code === 'ArrowUp') {
                 clearInterval(speedDecreaseInterval);
                 speedIncreaseInterval = setInterval(() => {
                     speed += 2;
                 }, 100);
-            } else if (event.code === 'ArrowDown' || event.code === 'KeyS') {
+            } else if (event.code === 'ArrowDown') {
                 clearInterval(speedIncreaseInterval);
                 speedDecreaseInterval = setInterval(() => {
-                    speed = Math.max(1, speed - 2);
+                    speed = Math.max(baseSpeed, speed - 2);
                 }, 100);
+            } else if (event.code === 'KeyW') {
+                isWPressed = true;
+                isSPressed = false;
+            } else if (event.code === 'KeyS') {
+                isSPressed = true;
+                isWPressed = false;
             } else if (event.code === 'NumpadAdd') {
                 numStars += 100;
                 populateStars();
@@ -206,9 +216,13 @@
         });
 
         document.addEventListener('keyup', (event) => {
-            if (event.code === 'ArrowUp' || event.code === 'KeyW') {
+            if (event.code === 'KeyW') {
+                isWPressed = false;
+            } else if (event.code === 'KeyS') {
+                isSPressed = false;
+            } else if (event.code === 'ArrowUp') {
                 clearInterval(speedIncreaseInterval);
-            } else if (event.code === 'ArrowDown' || event.code === 'KeyS') {
+            } else if (event.code === 'ArrowDown') {
                 clearInterval(speedDecreaseInterval);
             }
         });
@@ -232,7 +246,7 @@
             if (!isGameOver) {
                 const touch = event.touches[0];
                 ship.x = touch.clientX;
-                ship.y = touch.clientY -300;
+                ship.y = touch.clientY - 300;
             }
         });
 
@@ -240,7 +254,7 @@
             if (isGameOver) {
                 const touch = event.touches[0];
                 ship.x = touch.clientX;
-                ship.y = touch.clientY-300;
+                ship.y = touch.clientY - 300;
                 resetGame();
             }
         });
@@ -252,7 +266,7 @@
             }
             score = 0;
             speed = baseSpeed;
-            numStars = 50;
+            numStars = 250;
             isGameOver = false;
             gameOverDiv.style.display = 'none';
             populateStars();
@@ -269,13 +283,23 @@
         function updateStars() {
             if (isGameOver) return;
 
+            // Adjust speed based on score
+            const speedMultiplier = 1 + Math.floor(score / 1000)/10; // Adjust the divisor to control the rate of speed increase
+            speed = baseSpeed * speedMultiplier;
+
+            if (isWPressed) {
+                speed *= 5; // Increase speed to 5x current speed while held
+            } else if (isSPressed) {
+                speed /= 2; // Set speed to current speed / 2 while pressed
+            }
+
             context.clearRect(0, 0, canvas.width, canvas.height);
 
             context.drawImage(shipImg, ship.x - ship.width / 2, ship.y - ship.height / 2, ship.width, ship.height);
 
             for (let i = 0; i < stars.length; i++) {
                 let star = stars[i];
-                star.z -= speed;
+                star.z -= star.isSpecial ? speed / 3 : speed;
 
                 if (star.z <= 0) {
                     if (!star.isSpecial) {
@@ -287,15 +311,31 @@
 
                 const sx = (star.x - ship.x) * (canvas.width / star.z) + ship.x;
                 const sy = (star.y - ship.y) * (canvas.width / star.z) + ship.y;
-                const size = Math.max((1 - star.z / canvas.width) * star.size, 4);
+                star.size = Math.max((1 - star.z / canvas.width) * 10, 2); // Gradually increase the size
 
                 context.fillStyle = star.isSpecial ? "red" : "white";
-                // Draw stars as circles
                 context.beginPath();
-                context.arc(sx, sy, size / 2, 0, Math.PI * 2);
+                context.arc(sx, sy, star.size / 2, 0, Math.PI * 2);
                 context.fill();
 
-                // Collision detection
+                if (speed >= baseSpeed * 5) { // Only draw trails if speed is at least 5x base speed
+                    const trailLength = Math.min(speed * 1, 100); // Max trail length
+                    const alpha = 0.2; // Trail transparency
+                    const ex = sx + (sx - ship.x) * 0.01 * trailLength;
+                    const ey = sy + (sy - ship.y) * 0.01 * trailLength;
+
+                    const gradient = context.createLinearGradient(sx, sy, ex, ey);
+                    gradient.addColorStop(0, star.isSpecial ? "rgba(255, 0, 0, 1)" : "rgba(255, 255, 255, 1)");
+                    gradient.addColorStop(1, star.isSpecial ? `rgba(255, 0, 0, 0)` : `rgba(255, 255, 255, 0)`);
+
+                    context.strokeStyle = gradient;
+                    context.lineWidth = star.size / 2;
+                    context.beginPath();
+                    context.moveTo(sx, sy);
+                    context.lineTo(ex, ey);
+                    context.stroke();
+                }
+
                 if (sx > ship.x - ship.width / 2 && sx < ship.x + ship.width / 2 && sy > ship.y - ship.height / 2 && sy < ship.y + ship.height / 2) {
                     if (star.isSpecial) {
                         score += 1000;
@@ -308,7 +348,6 @@
                 }
             }
 
-            // Comets
             if (score % 100 === 0) {
                 comets.push(createComet());
             }
@@ -318,10 +357,7 @@
                 comet.x += comet.vx;
                 comet.y += comet.vy;
 
-                context.fillStyle = "orange";
-                context.beginPath();
-                context.arc(comet.x, comet.y, comet.size, 0, Math.PI * 2);
-                context.fill();
+                context.drawImage(cometImg, comet.x - comet.size / 2, comet.y - comet.size / 2, comet.size, comet.size);
 
                 if (comet.x < 0 || comet.x > canvas.width || comet.y < 0 || comet.y > canvas.height) {
                     comets.splice(i, 1);
@@ -337,10 +373,8 @@
             scoreDiv.textContent = `Score: ${score}`;
             highScoreDiv.textContent = `High Score: ${highScore}`;
 
-            // Increase speed and number of stars based on the score
-            speed = baseSpeed + Math.floor(score / 10000);
-            if (score % 10000 === 0) {
-                numStars += 200;
+            if (score % 100 === 0) {
+                numStars += 50;
                 populateStars();
             }
 
