@@ -287,7 +287,7 @@
             if (isGameOver) return;
 
             // Adjust speed based on score
-            const speedMultiplier = 1 + Math.floor(score / 1000)/10; // Adjust the divisor to control the rate of speed increase
+            const speedMultiplier = 1 + Math.floor(score / 1000)/15; // Adjust the divisor to control the rate of speed increase
             speed = Math.min(maxSpeed, baseSpeed * speedMultiplier);
 
             if (isWPressed) {
@@ -352,7 +352,7 @@
                 populateStars();
             }
 
-            if (score % 100 === 0) {
+            if (score % 50 === 0) {
                 comets.push(createComet());
             }
 
