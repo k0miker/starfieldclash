@@ -76,7 +76,7 @@
     <div id="instructions">
         <h2>Game Instructions</h2>
         <p>Control the spaceship with your mouse or touch.</p>
-        <p>Avoid regular stars and comets, collect red special stars for bonus points.</p>
+        <p>Avoid comets, collect red special stars for bonus points.</p>
         <p>Use the following keys to adjust the game:</p>
         <ul>
             <li><b>Arrow Up:</b> Increase speed</li>
@@ -101,11 +101,13 @@
 
         const context = canvas.getContext("2d");
 
-        let numStars = 250;
+        let numStars = 50;
+        const maxStars = 3000;
         const stars = [];
         const comets = [];
         let baseSpeed = 5;
         let speed = baseSpeed;
+        const maxSpeed = baseSpeed * 10;
         let score = 0;
         let isGameOver = false;
         let highScore = localStorage.getItem('highScore') || 0;
@@ -138,6 +140,7 @@
                 z: Math.random() * canvas.width,
                 o: Math.random(),
                 size: 0, // Start with size 0
+                speedVariation: Math.random() * 0.5 + 0.75, // Speed variation between 0.75 and 1.25
                 isSpecial: index % 20 === 0 // Every 20th star is special
             };
         }
@@ -183,7 +186,7 @@
         }
 
         function populateStars() {
-            const newStarsCount = numStars - stars.length;
+            const newStarsCount = Math.min(maxStars, numStars) - stars.length;
             for (let i = 0; i < newStarsCount; i++) {
                 stars.push(createStar(stars.length + i));
             }
@@ -193,7 +196,7 @@
             if (event.code === 'ArrowUp') {
                 clearInterval(speedDecreaseInterval);
                 speedIncreaseInterval = setInterval(() => {
-                    speed += 2;
+                    speed = Math.min(maxSpeed, speed + 2);
                 }, 100);
             } else if (event.code === 'ArrowDown') {
                 clearInterval(speedIncreaseInterval);
@@ -207,10 +210,10 @@
                 isSPressed = true;
                 isWPressed = false;
             } else if (event.code === 'NumpadAdd') {
-                numStars += 100;
+                numStars = Math.min(maxStars, numStars + 50);
                 populateStars();
             } else if (event.code === 'NumpadSubtract') {
-                numStars = Math.max(100, numStars - 100);
+                numStars = Math.max(50, numStars - 50);
                 populateStars();
             }
         });
@@ -266,7 +269,7 @@
             }
             score = 0;
             speed = baseSpeed;
-            numStars = 250;
+            numStars = 50;
             isGameOver = false;
             gameOverDiv.style.display = 'none';
             populateStars();
@@ -285,10 +288,10 @@
 
             // Adjust speed based on score
             const speedMultiplier = 1 + Math.floor(score / 1000)/10; // Adjust the divisor to control the rate of speed increase
-            speed = baseSpeed * speedMultiplier;
+            speed = Math.min(maxSpeed, baseSpeed * speedMultiplier);
 
             if (isWPressed) {
-                speed *= 5; // Increase speed to 5x current speed while held
+                speed = Math.min(maxSpeed, speed * 5); // Increase speed to 5x current speed while held
             } else if (isSPressed) {
                 speed /= 2; // Set speed to current speed / 2 while pressed
             }
@@ -299,7 +302,7 @@
 
             for (let i = 0; i < stars.length; i++) {
                 let star = stars[i];
-                star.z -= star.isSpecial ? speed / 3 : speed;
+                star.z -= star.isSpecial ? (speed / 3) * star.speedVariation : speed * star.speedVariation;
 
                 if (star.z <= 0) {
                     if (!star.isSpecial) {
@@ -336,16 +339,17 @@
                     context.stroke();
                 }
 
-                if (sx > ship.x - ship.width / 2 && sx < ship.x + ship.width / 2 && sy > ship.y - ship.height / 2 && sy < ship.y + ship.height / 2) {
-                    if (star.isSpecial) {
-                        score += 1000;
-                        Object.assign(star, createStar(i));
-                        star.z = canvas.width;
-                    } else {
-                        gameOver();
-                        return;
-                    }
+                // Check collision only for special stars
+                if (star.isSpecial && sx > ship.x - ship.width / 2 && sx < ship.x + ship.width / 2 && sy > ship.y - ship.height / 2 && sy < ship.y + ship.height / 2) {
+                    score += 1000;
+                    Object.assign(star, createStar(i));
+                    star.z = canvas.width;
                 }
+            }
+
+            if (score % 100 === 0 && numStars < maxStars) {
+                numStars += 5;
+                populateStars();
             }
 
             if (score % 100 === 0) {
@@ -372,11 +376,6 @@
 
             scoreDiv.textContent = `Score: ${score}`;
             highScoreDiv.textContent = `High Score: ${highScore}`;
-
-            if (score % 100 === 0) {
-                numStars += 50;
-                populateStars();
-            }
 
             requestAnimationFrame(updateStars);
         }
