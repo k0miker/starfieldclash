@@ -266,7 +266,7 @@ function updateStars() {
             gradient.addColorStop(1, star.isSpecial ? `rgba(255, 0, 0, 0)` : `rgba(255, 255, 255, 0)`);
 
             context.strokeStyle = gradient;
-            context.lineWidth = star.size / 2;
+            context.lineWidth = star.size / 8;
             context.beginPath();
             context.moveTo(sx, sy);
             context.lineTo(ex, ey);
