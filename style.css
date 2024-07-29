@@ -3,8 +3,8 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
-    background-color: black;
+    height: 100vh;    
+    /* background-color: black; */
     overflow: hidden;
     color: white;
     font-family: Arial, sans-serif;
@@ -57,3 +57,4 @@ body {
     border-radius: 5px;
     cursor: pointer;
 }
+
