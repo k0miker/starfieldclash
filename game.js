@@ -256,7 +256,7 @@ function updateStars() {
 
         // Draw trails for fast-moving stars
         if (speed >= baseSpeed * 5) {
-            const trailLength = Math.min(speed * 1, 100); // Max trail length
+            const trailLength = Math.min(speed * 1, 50); // Max trail length
             const alpha = 0.2; // Trail transparency
             const ex = sx + (sx - ship.x) * 0.01 * trailLength;
             const ey = sy + (sy - ship.y) * 0.01 * trailLength;
@@ -266,7 +266,7 @@ function updateStars() {
             gradient.addColorStop(1, star.isSpecial ? `rgba(255, 0, 0, 0)` : `rgba(255, 255, 255, 0)`);
 
             context.strokeStyle = gradient;
-            context.lineWidth = star.size / 8;
+            context.lineWidth = star.size / 10;
             context.beginPath();
             context.moveTo(sx, sy);
             context.lineTo(ex, ey);
