@@ -246,11 +246,14 @@ function updateStars() {
         // Calculate star's position on the canvas
         const sx = (star.x - ship.x) * (canvas.width / star.z) + ship.x;
         const sy = (star.y - ship.y) * (canvas.width / star.z) + ship.y;
+        if (star.isSpecial) {
+            star.size = star.size < 5 ? star.size + 0.1 : 5; // Increase the size of special stars
+        }
         star.size = Math.max((1 - star.z / canvas.width) * 10, 2); // Gradually increase the size
 
         // Set star color based on whether it is special
         context.fillStyle = star.isSpecial ? "red" : "white";
-        context.beginPath();
+        context.beginPath();        
         context.arc(sx, sy, star.size / 2, 0, Math.PI * 2);
         context.fill();
 
