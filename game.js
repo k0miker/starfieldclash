@@ -5,7 +5,6 @@ const highScoreDiv = document.getElementById('highscore');
 const gameOverDiv = document.getElementById('gameover');
 const instructionsDiv = document.getElementById('instructions');
 const startButton = document.getElementById('startButton');
-
 // Set the canvas dimensions to match the window dimensions
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
@@ -14,8 +13,8 @@ canvas.height = window.innerHeight;
 const context = canvas.getContext("2d");
 
 // Initialize variables for the game
-let numStars = 50; // Initial number of stars
-const maxStars = 2000; // Maximum number of stars
+let numStars = 150; // Initial number of stars
+const maxStars = 2500; // Maximum number of stars
 const stars = []; // Array to store star objects
 const comets = []; // Array to store comet objects
 let baseSpeed = 5; // Base speed for stars
@@ -31,8 +30,8 @@ let isSPressed = false; // State for "S" key press
 const ship = {
     x: canvas.width / 2,
     y: canvas.height / 2,
-    width: 50,
-    height: 50
+    width: 30,
+    height: 40
 };
 
 // Load ship and comet images
@@ -56,7 +55,7 @@ function createStar(index) {
         o: Math.random(), // Opacity
         size: 0, // Start with size 0
         speedVariation: Math.random() * 0.5 + 0.75, // Speed variation between 0.75 and 1.25
-        isSpecial: index % 20 === 0 // Every 20th star is special
+        isSpecial: index % 20 === 0 // Every 20th star is special 
     };
 }
 
@@ -214,12 +213,12 @@ function updateStars() {
     if (isGameOver) return;
 
     // Adjust speed based on score
-    const speedMultiplier = 1 + Math.floor(score / 1000) / 15; // Adjust the divisor to control the rate of speed increase
+    const speedMultiplier = 1 + Math.floor(score / 2000) / 15; // Adjust the divisor to control the rate of speed increase
     speed = Math.min(maxSpeed, baseSpeed * speedMultiplier); // Update speed with multiplier
 
     // Check if "W" or "S" keys are pressed
     if (isWPressed) {
-        speed = Math.min(maxSpeed, speed * 5); // Increase speed to 5x current speed while held
+        speed = Math.min(maxSpeed, speed * 3); // Increase speed to 5x current speed while held
     } else if (isSPressed) {
         speed /= 2; // Set speed to current speed / 2 while pressed
     }

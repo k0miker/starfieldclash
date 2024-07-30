@@ -1,14 +1,30 @@
 body {
+    position: relative;
     margin: 0;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;    
-    /* background-color: black; */
-    overflow: hidden;
+    height: 100vh;  
     color: white;
     font-family: Arial, sans-serif;
+    background-color: black;
+    /* background-image: url(./bg.jpg);
+    background-size: 200%;    
+    background-position: bottom;
+    z-index: -1;
+    animation: bgAnimation 260s linear infinite; */
 }
+/* @keyframes bgAnimation {
+    0% {
+        background-size: 100%;
+    }
+    50% {
+        background-size: 200%;
+    }
+    100% {
+        background-size: 100%;
+    }
+} */
 
 #loading {
     color: white;
@@ -17,7 +33,7 @@ body {
 
 #score, #highscore, #gameover, #instructions {
     position: absolute;
-    font-size: 20px;
+    font-size: 12px;
 }
 
 #score {
@@ -38,7 +54,10 @@ body {
     color: red;
     display: none;
 }
-
+ul {
+    list-style-type: none;
+    padding: 0;
+}
 #instructions {
     top: 10px;
     left: 10px;
@@ -49,8 +68,8 @@ body {
 }
 
 #startButton {
-    font-size: 24px;
-    padding: 10px 20px;
+    font-size: 14px;
+    padding: 5px 5px;
     background-color: green;
     color: white;
     border: none;
